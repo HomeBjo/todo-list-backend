@@ -27,6 +27,28 @@ class TodoItemView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         print(serializer.errors)  
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def patch(self, request, pk, format=None):
+        try:
+            todo = TodoItem.objects.get(pk=pk, author=request.user)
+        except TodoItem.DoesNotExist:
+            return Response({"error": "Todo item not found or you do not have permission to edit it."}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = TodoItemSerializer(todo, data=request.data, partial=True, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, pk, format=None):
+        try:
+            todo = TodoItem.objects.get(pk=pk, author=request.user)
+        except TodoItem.DoesNotExist:
+            return Response({"error": "Todo item not found or you do not have permission to edit it."}, status=status.HTTP_404_NOT_FOUND)
+        
+        todo.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
         
     
 class LoginView(ObtainAuthToken):
